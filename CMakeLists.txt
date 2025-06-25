@@ -162,7 +162,8 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 # Python wrapper
 option(BUILD_PYTHON_WRAPPER "Builds Python wrapper" ON)
 
-find_package(Python3 QUIET COMPONENTS Development NumPy)
+# Force Python3 detection from the venv explicitly
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
 
 if(BUILD_PYTHON_WRAPPER AND Python3_Development_FOUND AND Python3_NumPy_FOUND)
 
@@ -179,23 +180,28 @@ if(BUILD_PYTHON_WRAPPER AND Python3_Development_FOUND AND Python3_NumPy_FOUND)
         ${PROJECT_BINARY_DIR}/apriltag_py_type_docstring.h
     )
 
-    # set the SOABI manually since renaming the library via OUTPUT_NAME does not work on MSVC
+    # Set the SOABI manually
     set(apriltag_py_target "apriltag.${Python3_SOABI}")
     Python3_add_library(${apriltag_py_target} MODULE ${CMAKE_CURRENT_SOURCE_DIR}/apriltag_pywrap.c)
     add_dependencies(${apriltag_py_target} apriltag_py_docstrings)
-    # avoid linking against Python3::Python to prevent segmentation faults in Conda environments
-    # https://github.com/AprilRobotics/apriltag/issues/352
+
     target_link_libraries(${apriltag_py_target} PRIVATE apriltag Python3::NumPy)
     target_include_directories(${apriltag_py_target} PRIVATE ${PROJECT_BINARY_DIR})
 
-    set(PY_DEST ${CMAKE_INSTALL_PREFIX}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages/)
+    # Use Python's site-packages from the venv
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"
+        OUTPUT_VARIABLE PY_DEST
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
     install(TARGETS ${apriltag_py_target} LIBRARY DESTINATION ${PY_DEST})
 elseif(BUILD_PYTHON_WRAPPER)
     message(WARNING
         "Python bindings requested (BUILD_PYTHON_WRAPPER=ON) but Development and NumPy not found. "
-        "Python bindings will not be built. Set BUILD_PYTHON_WRAPPER=OFF to silent this warnings."
-     )
+        "Python bindings will not be built. Set BUILD_PYTHON_WRAPPER=OFF to silence this warning."
+    )
 endif()
+
 
 # Examples
 if (BUILD_EXAMPLES)
