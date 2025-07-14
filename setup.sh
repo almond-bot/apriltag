@@ -6,6 +6,8 @@ cmake -B build \
     -DPython3_EXECUTABLE=$(which python)
 sudo cmake --build build --target install
 
-echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/usr-local.conf
+if [ ! -f /etc/ld.so.conf.d/usr-local.conf ] || ! grep -q "/usr/local/lib" /etc/ld.so.conf.d/usr-local.conf; then
+    echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/usr-local.conf
+fi
 sudo ldconfig
 ldconfig -p | grep libapriltag
