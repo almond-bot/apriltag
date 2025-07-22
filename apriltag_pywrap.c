@@ -1,4 +1,4 @@
-#define NPY_NO_DEPRECATED_API NPY_API_VERSION
+#define PY_ARRAY_UNIQUE_SYMBOL apriltag_ARRAY_API
 
 #include <stdbool.h>
 #include <Python.h>

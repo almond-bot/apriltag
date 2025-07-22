@@ -187,6 +187,9 @@ if(BUILD_PYTHON_WRAPPER AND Python3_Development_FOUND AND Python3_NumPy_FOUND)
 
     target_link_libraries(${apriltag_py_target} PRIVATE apriltag Python3::NumPy)
     target_include_directories(${apriltag_py_target} PRIVATE ${PROJECT_BINARY_DIR})
+    
+    # Disable strict warnings for NumPy 2.x compatibility
+    target_compile_options(${apriltag_py_target} PRIVATE -Wno-error -Wno-pedantic)
 
     # Use Python's site-packages from the venv
     execute_process(
